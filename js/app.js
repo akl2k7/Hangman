@@ -1,7 +1,7 @@
 var canvas = document.getElementById("gallows");
 var context = canvas.getContext("2d");
 var score = 0;
-var words;
+var words = [];
 var currentWord = "";
 var blanks = "";
 var message = $("#message");
@@ -18,16 +18,25 @@ function drawStage(){
 	context.stroke();
 }
 
-
+// Trying my hand at a callback function
+function getData(callback){
+	var data = $.getJSON("json/words.json", function(data){
+		callback(data);
+	});
+}
 
 function newGame(){
-	let numOfWords = words.length;
-	let random = Math.random() * numOfWords;
-	currentWord = words[random];
-	blanks = "";
-	for(var i = 0; i < currentWord.length; i++){
-		blanks += "_";
-	}
+	$.getJSON("json/words.json", function(data){
+		words = data;
+		let numOfWords = words.length;
+		let random = Math.floor(Math.random() * numOfWords);
+		currentWord = words[random];
+		$("#message").text(currentWord);	
+		for(var i = 0; i < currentWord.length; i++){
+			blanks += "_ ";
+		}
+	});
+
 	context.clearRect(0,0, canvas.width, canvas.height);
 	drawStage();
 	$("#newGame").prop("disabled", true);
@@ -68,7 +77,7 @@ function checkSubmission(submitted){
 				if(currentWord[i] === submitted)
 					newBlank.push(submitted);
 				else 
-					newBlank.push("_");
+					newBlank.push("_ ");
 
 				blanks = newBlank;
 			}
@@ -80,7 +89,7 @@ function checkSubmission(submitted){
 
 // Decide which limb to draw based on score
 function drawLimb(){
-
+	currentWord = message.text();
 	// The functions that manipulate the canvas
 	function drawHead(){
 		context.beginPath();
@@ -145,11 +154,6 @@ function drawLimb(){
 // Event Code
 $(document).ready(function(){
 	newGame();
-	$.getJSON("json/words.json", function(data){
-		words = [];
-		words = data;
-	});
-
 	$("#submit").on("click", function(){
 		let submission = $("#guess").text;
 		checkSubmission(submission);
@@ -158,4 +162,6 @@ $(document).ready(function(){
 	$("#newGame").on("click", function(){
 		newGame();
 	});
+	
 });
+
