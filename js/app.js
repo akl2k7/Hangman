@@ -5,7 +5,7 @@ var words = [];
 var currentWord = "";
 var correctGuesses = [];
 var numOfBlanks = 100;
-var blanks = "";
+var blanks = [];
 var message = $("#message");
 
 function drawStage(){
@@ -31,13 +31,16 @@ function newGame(){
 	let numOfWords = words.length;
 	let random = Math.floor(Math.random() * numOfWords);
 	currentWord = words[random];
-	$("#message").text(currentWord);	
+		
 	for(var i = 0; i < currentWord.length; i++){
-		blanks += "_ ";
+		blanks.push("_");
 	}
+	message.text(blanks);
 	
-
+	score = 0;
 	context.clearRect(0,0, canvas.width, canvas.height);
+	context.beginPath();
+
 	drawStage();
 	$("#newGame").prop("disabled", true);
 	$("#guess").val("");
