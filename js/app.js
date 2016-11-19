@@ -3,6 +3,8 @@ var context = canvas.getContext("2d");
 var score = 0;
 var words = [];
 var currentWord = "";
+var correctGuesses = [];
+var numOfBlanks = 100;
 var blanks = "";
 var message = $("#message");
 
@@ -26,16 +28,14 @@ function getData(callback){
 }
 
 function newGame(){
-	$.getJSON("json/words.json", function(data){
-		words = data;
-		let numOfWords = words.length;
-		let random = Math.floor(Math.random() * numOfWords);
-		currentWord = words[random];
-		$("#message").text(currentWord);	
-		for(var i = 0; i < currentWord.length; i++){
-			blanks += "_ ";
-		}
-	});
+	let numOfWords = words.length;
+	let random = Math.floor(Math.random() * numOfWords);
+	currentWord = words[random];
+	$("#message").text(currentWord);	
+	for(var i = 0; i < currentWord.length; i++){
+		blanks += "_ ";
+	}
+	
 
 	context.clearRect(0,0, canvas.width, canvas.height);
 	drawStage();
@@ -46,21 +46,22 @@ function newGame(){
 // Call when win condition is fulfilled
 function winGame(){
 	message.html("You won! Congratulations!");
+	$("#newGame").prop("disabled", false);
 }
 
 // Call when you lost
 function gameOver(){
 	message.html("Game Over");
+	$("#newGame").prop("disabled", false);
 }
 
 // Check submission
 function checkSubmission(submitted){
-
+	numOfBlanks = 0;
 	function scoreUp(){
 		score++;
 		drawLimb();
 	}
-
 	// Check if the player guessed the entire word
 	if(submitted.length > 1){
 		if(currentWord === submitted){
@@ -70,17 +71,24 @@ function checkSubmission(submitted){
 		}
 	} else {
 		// Check the word for the letter submitted
-		if(currentWord.indexOf(submitted) > -1){
+		if(currentWord.includes(submitted)){
 			// Change instances of letter in blanks variable
+			correctGuesses.push(submitted);
 			let newBlank = [];
 			for(var i = 0; i < currentWord.length; i++){
-				if(currentWord[i] === submitted)
-					newBlank.push(submitted);
-				else 
-					newBlank.push("_ ");
-
-				blanks = newBlank;
+				// Check if current index of currentWord is in correct answers
+				if(correctGuesses.indexOf(currentWord[i]) > -1){
+					newBlank.push(currentWord[i]);
+				}
+				else{
+					newBlank.push("_");
+					numOfBlanks++;
+				}
+				blanks = newBlank.toString();
 			}
+			message.text(blanks);
+			if(numOfBlanks === 0)
+				winGame();
 		} else {
 			scoreUp();
 		}
@@ -89,7 +97,6 @@ function checkSubmission(submitted){
 
 // Decide which limb to draw based on score
 function drawLimb(){
-	currentWord = message.text();
 	// The functions that manipulate the canvas
 	function drawHead(){
 		context.beginPath();
@@ -153,9 +160,16 @@ function drawLimb(){
 
 // Event Code
 $(document).ready(function(){
+	data = $.parseJSON($.ajax({
+		url: "json/words.json",
+		dataType: "json",
+		async: false
+	}).responseText);
+	words = data;
+
 	newGame();
 	$("#submit").on("click", function(){
-		let submission = $("#guess").text;
+		let submission = $("#guess").val();
 		checkSubmission(submission);
 	});
 
@@ -164,4 +178,3 @@ $(document).ready(function(){
 	});
 	
 });
-
